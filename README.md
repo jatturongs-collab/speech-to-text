@@ -169,4 +169,4 @@ The look is set in `.streamlit/config.toml` (colours, font, server upload cap). 
 
 ## License
 
-[MIT](LICENSE) © 2026 jatturongs-collab
+[MIT](LICENSE) © 2026 AI investor alpha Jat

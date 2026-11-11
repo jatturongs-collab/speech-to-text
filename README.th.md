@@ -170,4 +170,4 @@ Mode                 LastWriteTime         Length Name
 
 ## สัญญาอนุญาต (License)
 
-[MIT](LICENSE) © 2026 jatturongs-collab
+[MIT](LICENSE) © 2026 AI investor alpha Jat
