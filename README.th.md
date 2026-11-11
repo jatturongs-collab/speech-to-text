@@ -14,25 +14,70 @@
 
 ## สิ่งที่ต้องมี (Requirements)
 
-- **Python 3.10 – 3.13** (ยังไม่รองรับ 3.14 ขึ้นไป เพราะ `av` ยังไม่มี wheel)
+- **Python 3.13** (ใช้ได้ 3.10 – 3.13) บน Windows `setup.ps1` จะติดตั้ง Python 3.13 ให้เองข้าง ๆ เวอร์ชันที่มีอยู่ จึงเก็บ Python 3.14 / 3.15 ไว้ในเครื่องเดียวกันได้ ถ้าตั้งค่าด้วยมือ (macOS / Linux) ให้สร้าง venv ด้วย Python 3.13 เพราะแพ็กเกจที่ `faster-whisper` ใช้ (`av<17`, `onnxruntime`) ยังไม่มีสำหรับ 3.14 ขึ้นไป
 - **ffmpeg** อยู่ใน PATH (ใช้กับตัวแปลง MP3 → MP4) Windows: `winget install Gyan.FFmpeg`, macOS: `brew install ffmpeg`, Linux/WSL: `sudo apt install ffmpeg`
 - Windows, macOS, Linux หรือ WSL2 ไม่ต้องมี GPU
 
 ## ติดตั้งและรัน (Install & run)
 
+### Windows (ทีละขั้นตอน)
+
+**ขั้นที่ 1. ติดตั้งโปรแกรมที่ต้องมี** (ทำครั้งเดียว)
+
+- **Git** จาก <https://git-scm.com/download/win> หรือไม่ใช้ Git ก็ได้ ให้กด **Code → Download ZIP** บน GitHub แล้วแตกไฟล์
+- **Python:** ไม่ต้องทำอะไร ขั้นที่ 3 จะติดตั้ง Python 3.13 ให้อัตโนมัติ (ติดตั้งข้าง ๆ ของเดิม Python ที่มีอยู่ เช่น 3.15 จะไม่ถูกเปลี่ยน)
+
+**ขั้นที่ 2. โหลดโปรเจกต์**
+
+```bash
+git clone https://github.com/jatturongs-collab/speech-to-text.git
+```
+```bash
+cd speech-to-text
+```
+
+**ขั้นที่ 3. รันสคริปต์ติดตั้ง** สคริปต์จะติดตั้ง ffmpeg และ Python 3.13 (ถ้ายังไม่มี) สร้าง `.venv` ด้วย Python 3.13 และติดตั้งแพ็กเกจทั้งหมดใน `requirements.txt` (ต้องใส่ `-ExecutionPolicy Bypass` เพราะ Windows บล็อกไฟล์ `.ps1` โดยค่าเริ่มต้น)
+
+```bash
+powershell -ExecutionPolicy Bypass -File .\setup.ps1
+```
+
+เสร็จแล้ว **ปิด PowerShell เปิดใหม่ แล้ว `cd speech-to-text` อีกครั้ง** เพื่อให้ ffmpeg ใช้งานได้
+
+**ขั้นที่ 4. เปิดแดชบอร์ด**
+
+```bash
+.\.venv\Scripts\python.exe -m streamlit run app.py
+```
+
+เบราว์เซอร์จะเปิดที่ <http://localhost:8501> (พอร์ตอาจต่างไป ให้ใช้ลิงก์ที่ PowerShell แสดง) ใช้สวิตช์ **ไทย / English** ที่แถบซ้าย (sidebar) และปุ่ม **เปิดคู่มือ (README)** ที่แถบซ้ายเพื่ออ่านคู่มือนี้ในแอป
+
+**ขั้นที่ 5. (เฉพาะแท็บ Auto 1 Click และ Online) เตรียม `client_secret.json`** ไฟล์นี้ไม่อยู่ใน GitHub โดยตั้งใจ ให้คัดลอกจากเครื่องเดิม หรือสร้างใหม่ตาม [ตั้งค่า `client_secret.json`](#ตั้งค่า-client_secretjson-จำเป็นสำหรับการอัปโหลดอัตโนมัติ) แล้ววางไว้ข้างไฟล์ `app.py` ไม่ต้องคัดลอก `token.json` เครื่องใหม่ล็อกอิน Google ครั้งเดียว แท็บ **Offline** ไม่ต้องใช้ไฟล์นี้
+
+ครั้งต่อไปทำแค่ขั้นที่ 4 (ในโฟลเดอร์โปรเจกต์) กด `Ctrl+C` ใน PowerShell เพื่อหยุด การรันแท็บ Offline ครั้งแรกจะดาวน์โหลดโมเดล large-v3 (ประมาณ 3 GB)
+
+### macOS / Linux / WSL
+
 ```bash
 git clone https://github.com/jatturongs-collab/speech-to-text.git
 cd speech-to-text
 
-python -m venv .venv
-# Windows (PowerShell):  .venv\Scripts\Activate.ps1
-# WSL / Linux / macOS:   source .venv/bin/activate
-
+# ติดตั้ง ffmpeg ก่อน: macOS `brew install ffmpeg`, Linux/WSL `sudo apt install ffmpeg`
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-เบราว์เซอร์จะเปิดที่ <http://localhost:8501> ใช้สวิตช์ **ไทย / English** ที่แถบซ้าย (sidebar) และปุ่ม **เปิดคู่มือ (README)** ที่แถบซ้ายเพื่ออ่านคู่มือนี้ในแอป
+### ถอนการติดตั้ง (Uninstall)
+
+ปิดแดชบอร์ด (`Ctrl+C`) แล้วรันในโฟลเดอร์โปรเจกต์ (Windows):
+
+```bash
+powershell -ExecutionPolicy Bypass -File .\uninstall.ps1
+```
+
+สคริปต์ **ถามทีละรายการ** (ค่าเริ่มต้นคือ No): `.venv`, แคชโมเดล Whisper (~3 GB), `token.json`, `jobs.json`, `history.jsonl`, `transcripts\`, `client_secret.json` และ ffmpeg ข้อมูลที่ลบแล้วกู้คืนไม่ได้ สคริปต์ไม่ลบโฟลเดอร์โปรเจกต์และไม่ลบไฟล์เสียง/วิดีโอของคุณ ถ้าต้องการลบให้หมดให้ลบโฟลเดอร์โปรเจกต์เอง วิดีโอที่อัปโหลดไว้บน YouTube สคริปต์ไม่ลบให้ ให้ลบในแอปหรือ YouTube Studio ก่อน ถ้าเคยใช้แท็บ YouTube ควรยกเลิกสิทธิ์ที่ <https://myaccount.google.com/permissions> ด้วย บน macOS/Linux ให้ลบ `.venv` และโฟลเดอร์ `~/.cache/huggingface/hub/models--Systran--faster-whisper-large-v3` ด้วยมือ
 
 ## ปิดหน้าเว็บแล้ว งานไม่หาย (Closed the page? Your uploads are not lost)
 
@@ -156,7 +201,7 @@ Mode                 LastWriteTime         Length Name
 ## แก้ปัญหา (Troubleshooting)
 
 - `File must be 200MB or smaller` → ขีดจำกัดคือ `maxUploadSize` (หน่วย MB) ใน `.streamlit/config.toml` ต้องรีสตาร์ตหลังแก้
-- `Failed to build 'av'` → คุณใช้ Python 3.14 ขึ้นไป ให้ใช้ 3.13 หรือต่ำกว่า
+- `Failed to build 'av'` → venv ถูกสร้างด้วย Python 3.14 ขึ้นไป ให้ลบโฟลเดอร์ `.venv` แล้วรัน `setup.ps1` ใหม่ (ใช้ Python 3.13)
 - `open() got an unexpected keyword argument 'metadata_errors'` → `av` ใหม่เกินไป รัน `pip install "av<17"`
 - *client_secret.json not found* → ทำตามหัวข้อตั้งค่าด้านบน แล้ววางไฟล์ข้าง `app.py`
 - *Access blocked / 403 access_not_configured* → ยังไม่ได้เปิด YouTube Data API v3 ในโปรเจกต์ หรืออีเมลของคุณไม่ได้อยู่ในรายชื่อ Test user

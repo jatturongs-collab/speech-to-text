@@ -13,25 +13,70 @@ A Streamlit dashboard (dark theme, Thai / English UI) that turns Thai audio/vide
 
 ## Requirements
 
-- **Python 3.10 – 3.13** (3.14+ is not supported yet: the `av` dependency has no wheels)
+- **Python 3.13** (3.10 – 3.13 work). On Windows `setup.ps1` installs Python 3.13 for you next to any other version you have, so you can keep Python 3.14 / 3.15 on the same PC. If you set it up by hand (macOS / Linux), create the venv with Python 3.13: the packages `faster-whisper` needs (`av<17`, `onnxruntime`) have no builds for 3.14+ yet.
 - **ffmpeg** on your PATH (needed for the MP3 → MP4 converter). Windows: `winget install Gyan.FFmpeg`, macOS: `brew install ffmpeg`, Linux/WSL: `sudo apt install ffmpeg`
 - Windows, macOS, Linux or WSL2. No GPU needed.
 
 ## Install & run
 
+### Windows (step by step)
+
+**Step 1. Install the prerequisites** (once)
+
+- **Git** from <https://git-scm.com/download/win>. Or skip Git and use **Code → Download ZIP** on GitHub, then extract it.
+- **Python:** nothing to do. Step 3 installs Python 3.13 automatically (side by side, so your existing Python, e.g. 3.15, is not changed).
+
+**Step 2. Get the project**
+
+```bash
+git clone https://github.com/jatturongs-collab/speech-to-text.git
+```
+```bash
+cd speech-to-text
+```
+
+**Step 3. Run the setup script.** It installs ffmpeg and Python 3.13 (if missing), creates `.venv` with Python 3.13 and installs every package in `requirements.txt`. (`-ExecutionPolicy Bypass` is needed because Windows blocks `.ps1` files by default.)
+
+```bash
+powershell -ExecutionPolicy Bypass -File .\setup.ps1
+```
+
+When it finishes, **close PowerShell, open it again and `cd speech-to-text`** so ffmpeg is on PATH.
+
+**Step 4. Start the dashboard**
+
+```bash
+.\.venv\Scripts\python.exe -m streamlit run app.py
+```
+
+The browser opens at <http://localhost:8501> (the port can differ; use the link shown in PowerShell). Use the **ไทย / English** switch in the sidebar, and the **Open the guide (README)** button in the sidebar to read this guide inside the app.
+
+**Step 5. (Auto 1 Click and Online tabs only) Add `client_secret.json`.** It is not in GitHub on purpose. Copy it from your other computer, or create it by following [Set up `client_secret.json`](#set-up-client_secretjson-needed-for-the-automatic-upload). Place it next to `app.py`. Do not copy `token.json`; you sign in to Google once on the new computer. The **Offline** tab does not need it.
+
+Next time, only repeat Step 4 (from the project folder). Press `Ctrl+C` in PowerShell to stop. The first Offline run downloads the large-v3 model (about 3 GB).
+
+### macOS / Linux / WSL
+
 ```bash
 git clone https://github.com/jatturongs-collab/speech-to-text.git
 cd speech-to-text
 
-python -m venv .venv
-# Windows (PowerShell):  .venv\Scripts\Activate.ps1
-# WSL / Linux / macOS:   source .venv/bin/activate
-
+# install ffmpeg first: macOS `brew install ffmpeg`, Linux/WSL `sudo apt install ffmpeg`
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-The browser opens at <http://localhost:8501>. Use the **ไทย / English** switch in the sidebar, and the **Open the guide (README)** button in the sidebar to read this guide inside the app.
+### Uninstall
+
+Close the dashboard (`Ctrl+C`), then in the project folder (Windows):
+
+```bash
+powershell -ExecutionPolicy Bypass -File .\uninstall.ps1
+```
+
+The script **asks about each item** (default No): `.venv`, the Whisper model cache (~3 GB), `token.json`, `jobs.json`, `history.jsonl`, `transcripts\`, `client_secret.json` and ffmpeg. Deleted data cannot be recovered. It never deletes the project folder or your own audio/video files; to remove everything, delete the project folder yourself. Videos already uploaded to YouTube are not deleted by the script: delete them in the app or YouTube Studio first. If you used the YouTube tabs, also revoke access at <https://myaccount.google.com/permissions>. On macOS/Linux, delete `.venv` and the folder `~/.cache/huggingface/hub/models--Systran--faster-whisper-large-v3` by hand.
 
 ## Closed the page? Your uploads are not lost
 
@@ -155,7 +200,7 @@ The look is set in `.streamlit/config.toml` (colours, font, server upload cap). 
 ## Troubleshooting
 
 - `File must be 200MB or smaller` → the limit is `maxUploadSize` (MB) in `.streamlit/config.toml`; restart after changing it.
-- `Failed to build 'av'` → you are on Python 3.14+. Use 3.13 or older.
+- `Failed to build 'av'` → the venv was created with Python 3.14+. Delete `.venv` and run `setup.ps1` again (it uses Python 3.13).
 - `open() got an unexpected keyword argument 'metadata_errors'` → `av` is too new; run `pip install "av<17"`.
 - *client_secret.json not found* → follow the setup section above and place the file next to `app.py`.
 - *Access blocked / 403 access_not_configured* → the YouTube Data API v3 isn't enabled for your project, or your email isn't listed as a test user.

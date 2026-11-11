@@ -23,7 +23,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Use Python 3.10-3.13. Python 3.14+ lacks wheels for `av` and the install fails.
+Use Python 3.13 for the venv (3.10-3.13 work). On Windows `setup.ps1` installs 3.13 side by side with any newer Python; 3.14+ lacks wheels for `av<17` / `onnxruntime`, so installing into a 3.14+ venv fails.
 
 ## Fixed settings (do not change unless the user asks)
 
