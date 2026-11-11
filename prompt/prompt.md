@@ -1,358 +1,178 @@
-# Prompts used to build this project
+# Master prompt: build this whole project with one request
 
-These are the prompts, in order, that were given to Claude Code to build this Speech to Text
-dashboard (and its Claude Skill). They are kept in the original wording, including typos and mixed
-Thai / English, so you can see how the project grew step by step.
+**วิธีใช้ (How to use)**
 
-Left out on purpose: pasted error logs, screenshots and one-word replies. Where a prompt contained
-a personal folder path, it was shortened.
+1. เปิดโฟลเดอร์ว่างใน Claude Code (เช่น `D:\speech-to-text`)
+2. (ถ้ามี) วางไฟล์ไอคอนไว้ที่ `assets/icon.png` และแบนเนอร์ที่ `assets/banner.webp` ก่อน
+3. คัดลอกข้อความในกล่อง **MASTER PROMPT** ด้านล่างทั้งหมด ไปวางใน Claude Code
+4. แก้ 5 ค่าที่อยู่ใน `[ ]` ด้านบนของ prompt ให้เป็นของคุณ (ชื่อผู้ถือลิขสิทธิ์, URL GitHub ฯลฯ)
+5. Claude Code จะวางแผนให้ดูก่อน ตอบรับแผน แล้วมันจะสร้างทุกไฟล์ ทดสอบ และถามก่อน push
 
----
+Copy the whole **MASTER PROMPT** block into Claude Code in an empty folder. It describes the app,
+the Claude Skill, the docs, the scripts and the rules in one go, so you do not have to add features
+one by one. The order in which these features were originally asked for is in
+[prompt-history.md](prompt-history.md).
 
-## Part 1 · Command-line tool (before the dashboard)
-
-### 1. CPU-only Thai speech-to-text pipeline
-
-```text
-Create a high-quality, CPU-only local Speech-to-Text pipeline for Thai language using `faster-whisper`. 
-I am running Windows 11 with PowerShell and strictly have NO GPU. Quality is the top priority, even if it heavily loads the CPU.
-
-Please write the following two files to my current directory:
-
-1. `setup.ps1`
-- A PowerShell script to install `ffmpeg` via winget and `faster-whisper` via pip.
-
-2. `hq_transcribe.py`
-- Uses `faster-whisper` with the `large-v3-turbo` model.
-- Explicitly set `device="cpu"` and `compute_type="int8"`.
-- To maximize Thai language accuracy on CPU, set `beam_size=5` and `vad_filter=True` (with `min_silence_duration_ms=500`).
-- Include this exact `initial_prompt` to force correct spelling of Thai financial terminology: "นี่คือคลิปOpportunity Day อธิบายงบการเงิน หุ้น SET, กำไรสุทธิ, ไตรมาส, อัตรากำไรขั้นต้น, ขาดทุน, YoY, QoQ, EBITDA, ยอดขาย, CAPEX"
-- Use `argparse` to accept the input audio/video file path.
-- Export both a `.txt` transcript and an `.srt` subtitle file with proper timestamps.
-
-Please generate and save these files directly to the disk now.
-```
-
-### 2. Follow-up questions while setting up
-
-```text
-what I need to do next ?
-```
-
-### 3. More quality
-
-```text
-ต้องการให้เพิ่ม Ultra High Quality
-```
+You still have to do these yourself (Claude Code cannot): create the Google Cloud project and
+download `client_secret.json`, sign in to Google in the browser, and create the GitHub repo.
 
 ---
 
-## Part 2 · The Streamlit dashboard and the Claude Skill
-
-### 4. The dashboard project
+## MASTER PROMPT
 
 ```text
-Act as an expert Python Developer. I want to create a complete transcription dashboard project that I will push to my GitHub repo to share with my friend. 
+Build a complete, shareable project called "Speech to Text Dashboard" in this folder, plus a Claude
+Skill for it. Plan first (plan mode), show me the plan, then build, test and tell me exactly what
+you verified and what you could not verify. Ask me before you commit or push anything.
 
-Please create a Claude Skill and a Python-based Web Dashboard (using `streamlit`) for media file transcription (MP3/MP4 to .txt and .md). 
+SETTINGS (use these values everywhere)
+- [COPYRIGHT_HOLDER]  = AI investor alpha Jat
+- [GITHUB_REPO_URL]   = https://github.com/<user>/speech-to-text
+- [OUTPUT_FOLDER_EXAMPLE] = D:\speech-to-text
+- Audience: a friend who is not a programmer, on a Windows 11 laptop, CPU only (no GPU).
+- Content language: Thai audio (finance, e.g. Opportunity Day / earnings calls).
 
-The dashboard must have a UI with 2 main options/tabs:
+1. WHAT IT DOES
+Turn Thai audio/video (MP3, MP4, M4A, WAV, MKV, WEBM) into clean .txt and .md transcripts, through
+three routes, shown as three big tabs: "Auto 1 Click", "Online (YouTube)", "Offline (Ultra HQ)".
 
-### Option 1: Online (YouTube Auto-Transcription)
-- Workflow: The user uploads a media file to their own YouTube channel (handled manually or via API). In the dashboard, the user inputs the YouTube URL.
-- The dashboard should have a "Fetch Transcript" button.
-- Use `yt-dlp` or `youtube-transcript-api` to fetch the auto-generated Thai transcript.
-- Clean the transcript (remove timestamps/duplicates) and provide a download button for both `.txt` and `.md` formats.
+2. TECH
+- Python app with Streamlit (>= 1.57). Files: app.py, requirements.txt, setup.ps1, uninstall.ps1,
+  hq_transcribe.py (command-line version of the Offline route), SKILL.md, README.md, README.th.md,
+  LICENSE, .gitignore, .streamlit/config.toml, assets/, prompt/.
+- Python 3.13 venv. faster-whisper needs `av<17` (av 17+ breaks it with a `metadata_errors` error)
+  and `onnxruntime`; neither has builds for Python 3.14/3.15, so the venv MUST be Python 3.13.
+- ffmpeg is required. app.py must find it even when the PATH of the running process is stale
+  (right after `winget install Gyan.FFmpeg`): look in PATH, then the Windows registry PATH, then
+  the winget package folder (`find_ffmpeg()`), and show a green/red badge in the sidebar.
+- Never hard-code personal paths, e-mails, project IDs or keys.
 
-### Option 2: Offline (Ultra High-Quality Local Transcription)
-- Workflow: The user uploads a local MP3/MP4 file directly into the dashboard.
-- The dashboard should have a "Start Local Transcription" button.
-- Strictly use `faster-whisper` with the FULL `large-v3` model.
-- Hardware constraints (CRITICAL): This will run on Windows/WSL2 with strictly NO GPU (CPU ONLY). 
-- You MUST configure the model with: `device="cpu"` and `compute_type="int8"`.
-- To ensure Thai language quality and prevent hallucination loops, set: `language="th"`, `beam_size=5`, `vad_filter=True` (min silence 500ms), and `condition_on_previous_text=False`.
-- Include an initial prompt for Thai financial terms: "นี่คือคลิปอธิบายงบการเงิน หุ้น SET, กำไรสุทธิ, ไตรมาส, อัตรากำไรขั้นต้น, ขาดทุน, YoY, QoQ, EBITDA, ยอดขาย, CAPEX"
-- Provide download buttons for the final `.txt` and `.md` files.
+3. OFFLINE TAB (local, highest quality)
+- faster-whisper model large-v3, CPU, compute_type int8, language "th", beam_size 5, VAD filter
+  with min_silence_duration_ms 500, condition_on_previous_text False, and a short Thai finance
+  initial_prompt. Show the model settings in the sidebar.
+- Multiple files, up to 2 GB each. Transcribe one after another, with progress, elapsed time and a
+  clear per-file status. Save .txt and .md; offer download. Stop button.
 
-### Deliverables:
-Please generate and save the following project structure directly to my disk:
-1. `app.py` - The main Streamlit dashboard application with a modern, clean UI.
-2. `requirements.txt` - All necessary Python packages (streamlit, faster-whisper, yt-dlp, youtube-transcript-api, etc.).
-3. `SKILL.md` - A Claude Skill file defining how Claude should manage, run, or update this project in the future. Give it a clear `name:` and `description:` in the YAML frontmatter.
-4. `README.md` - Instructions for my friend on how to `pip install -r requirements.txt` and run `streamlit run app.py` on their machine.
+4. ONLINE TAB (YouTube auto-captions)
+- Upload audio/video (2 GB per file). If it is audio-only, convert to MP4 with ffmpeg (black
+  1280x720, 1 fps, aac 192k, libx264 ultrafast stillimage) with a real progress bar; kill ffmpeg if
+  the user stops or closes the page.
+- Upload to the user's own YouTube channel as Unlisted with the YouTube Data API (resumable upload,
+  progress bar). Then poll every 30-60 s (timeout 15 min) for the auto-generated Thai captions.
+  Get the text with `youtube-transcript-api`, fall back to the captions API (captions().list +
+  download). Provide a "Check again" button when the wait times out.
 
-Please write these files to the current directory now.
-```
+5. AUTO 1 CLICK TAB (everything automatic)
+- Select many files at once (no practical limit; each up to 20 GB) -> upload to YouTube one by one
+  immediately, no extra clicks.
+- A slider "wait before checking the transcript" from 15 to 90 minutes, default 30. Wait the FULL
+  time first, then check ONCE; if not ready, retry every 300 s, at most 6 times.
+- When a transcript is ready, show a blinking green flag and the text with download buttons.
+- Per-item status for every file in the queue. Handle a YouTube channel daily-limit error
+  (`uploadLimitExceeded`) differently from an API quota error: stop the batch and explain which one
+  it was and what to do.
+- Stop button (a callback; a Streamlit rerun interrupts the script, so cleanup must be in `finally`).
 
-### 5. YouTube does not accept MP3: add a converter
+6. PERSISTENCE (closing the browser must not lose work)
+- Save every job to `jobs.json`, transcripts to `transcripts/`, and an event log to `history.jsonl`.
+  On start, resume/check unfinished jobs WITHOUT opening a browser sign-in (never pop up Google
+  login at startup). The port of Streamlit may change between runs; that must not matter.
 
-```text
-I found a limitation: YouTube does not accept raw MP3 files. 
+7. YOUTUBE ACCOUNT, DELETE AND HISTORY
+- OAuth with `client_secret.json` (next to app.py) and `token.json`. Scopes: youtube.upload and
+  youtube.force-ssl. Use `prompt="consent select_account"` so the user can choose an account. A
+  sidebar button "Switch Google account". Clear message if client_secret.json is missing.
+- A panel listing the videos on the channel (old uploads included) with a checkbox column and
+  "delete selected" with a confirm dialog; also delete a single video after a job. Handle the empty
+  list without crashing; mark a video deleted only if the API call really succeeded.
+- Sidebar "History (Log)": a list of events; clicking one opens a dialog with details.
 
-Please update the Streamlit dashboard (`app.py`) to solve this problem. 
-In the "Option 1: Online (YouTube Auto-Transcription)" tab, please add an "MP3 to YouTube-Ready MP4 Converter" helper utility.
+8. UI
+- Bilingual Thai/English with a switch at the top of the sidebar; every label and message in both.
+- Page title "Speech to Text Dashboard", icon from assets/icon.png (`st.logo` and page_icon).
+- Two themes in .streamlit/config.toml, following the system setting and the Settings menu:
+  warm cream light (background #F0EEE6, primary #C8643F, text #3D3929) and dark (background
+  #0b1220, accent #22d3ee). Font: IBM Plex Sans Thai. Rounded corners 0.75rem.
+- Tabs must be big, bold, framed, with a clear background (small CSS using `color-mix` so it follows
+  both themes). Tab "Auto 1 Click" first.
+- Uploads: `maxUploadSize = 20480` in config and `max_upload_size` per uploader (2048 Offline,
+  2048 Online, 20480 Auto). Show "2GB per file (MAX)" and the accepted formats next to each uploader.
+- Sidebar button "Open the guide (README)": a dialog that shows README.th.md when the UI is Thai and
+  README.md when English. Render GitHub `> [!CAUTION]` as a red box with a flag, `### 🔴 text` as a
+  red bold paragraph at 125% size, `**🔴 label**` as red bold, and `![..](assets/..)` as images.
 
-Workflow for this utility:
-1. The user uploads an MP3 file to this section in the dashboard.
-2. Use Python's `subprocess` to run `ffmpeg` and convert the MP3 into an MP4 by adding a static black background video track.
-3. Suggested ffmpeg command structure: 
-   `ffmpeg -f lavfi -i color=c=black:s=1280x720:r=1 -i input.mp3 -c:a aac -vcodec libx264 -shortest output.mp4`
-4. Show a progress indicator while converting.
-5. Provide a "Download MP4 for YouTube" button so the user can download it and upload it to their YouTube channel.
+9. SCRIPTS
+- setup.ps1 (Windows): install ffmpeg with winget if missing; install Python 3.13 with winget if
+  missing (side by side, never touch other Python versions); create .venv with `py -3.13`; run
+  `pip install -r requirements.txt`; check every exit code and stop with a clear message on failure.
+- uninstall.ps1: ask y/N (default No) for each item: .venv, the Whisper model cache (~3 GB under
+  the Hugging Face cache), token.json, jobs.json, history.jsonl, transcripts, __pycache__,
+  client_secret.json, ffmpeg. Never delete the project folder or the user's own media files.
+- hq_transcribe.py: command-line version (input file, --output-dir; writes .txt and .srt).
 
-Please apply these changes directly to `app.py`. Ensure the UI is intuitive so my friend knows to use this tool if they only have an MP3 file.
-```
+10. README.md (English) and README.th.md (Thai, same content, Thai first for Thai readers)
+- Banner image, tab table, requirements, "Install & run" with numbered Windows steps (1 prerequisites
+  (Git or Download ZIP; Python 3.13 is installed by setup.ps1), 2 get the project, 3 run setup.ps1
+  with `-ExecutionPolicy Bypass`, 4 start the app, 5 add client_secret.json) plus macOS/Linux/WSL
+  and Uninstall sections. Each command in its own code block.
+- Auto 1 Click section: the prerequisite "Set up client_secret.json" must be a RED FLAG: a
+  `> [!CAUTION]` box AND a `### 🔴` heading-line (red, bold, 125%), followed by a normal-size
+  example: "Copy client_secret.json to the same folder as app.py" with a PowerShell directory
+  listing of [OUTPUT_FOLDER_EXAMPLE].
+- Step-by-step "Set up client_secret.json" (Google Cloud: project, enable YouTube Data API v3,
+  OAuth consent screen/Audience = External, Testing, add Test users, create a Desktop-app OAuth
+  client, download the JSON). Explain: in Testing mode the sign-in expires after 7 days; unverified
+  projects upload as Private; quota is about 1,600 units per upload of 10,000 per day.
+- Formats and limits table, Appearance, "Closed the page? Your work is not lost", Stop/History/
+  channel list, Claude Skill section, License section.
+- Troubleshooting (each with the exact error text and the fix): `File must be 200MB or smaller`
+  (maxUploadSize); `Failed to build 'av'` (use Python 3.13 venv); `metadata_errors` (av<17);
+  ffmpeg not found (reopen PowerShell / winget); client_secret.json not found;
+  `Error 403: access_denied` / "Access blocked" (your e-mail is not a Test user: Google Cloud ->
+  Google Auth Platform -> Audience -> Test users -> Add users); `403 access_not_configured`
+  (enable YouTube Data API v3); no transcript after 15 min; `uploadLimitExceeded` (channel daily
+  limit: wait 24 h, verify the channel by phone, or switch to a second Google account added as a
+  Test user); Offline is slow (expected on CPU).
 
-### 6. Small follow-ups
+11. CLAUDE SKILL
+- SKILL.md with name `speech-to-text-dashboard`: when to use it, how to run, the project layout,
+  the rules above (Python 3.13, av<17, never commit secrets), and how to extend it.
 
-```text
-you mean I  need to open new session of power shell and run dashboard
-```
+12. PUBLIC-REPO SAFETY (the repo will be public)
+- .gitignore: client_secret.json, token.json, .venv/, __pycache__/, media files (mp3, mp4, m4a,
+  wav, mkv, webm), *.srt, jobs.json, history.jsonl, transcripts/.
+- LICENSE: MIT, "Copyright (c) 2026 [COPYRIGHT_HOLDER]". Mention it in the README.
+- Before any commit, list the files to be added and scan them for e-mails, keys, project IDs and
+  personal paths. Use an allowlist `git add`, never `git add .`.
 
-```text
-I got error the file must be smaller than 200M. can you fix it.
-```
-
-```text
-can you increate to 500M .
-```
-
-### 7. Thai text and clearer steps for the MP3 converter
-
-```text
-update UI and  
-
-🎵 Only have an MP3? Convert it to a YouTube-ready MP4 first
-
-YouTube does not accept raw MP3 files. This tool wraps your audio in an MP4 with a plain black picture so you can upload it to your channel. Then come back here and paste the video URL below.
-
-เพิ่ม ภาษาไทยอันนี่
-"
-Youtube ไม่รับ MP3 format : ปกติ Voice Record จะเป็น MP3 and Video is MP4.
-
-Additional Step 1.1 : upload MP3
-Additional Step 1.2 : convert MP3 to MP4
-
-หลังจากนั้นก็ upload MP4 file to youtube แบบที่เรา upload file ขึ้น youtube.
-หลัง upload ขึ้น youtube สำเร็จ อีกสักพัก 1 ชม Youtube จะสร้าง transcript file ให้ทำ Step 2# ต่อ"
-```
-
-### 8. A better design
-
-```text
-can you design the better web or how we do that ?
-```
-
-```text
-b, Thai/English
-```
-
-(The "b" picked the dark "pro tool" style; "Thai/English" asked for a language switch.)
-
----
-
-## Part 3 · Automating the YouTube upload
-
-### 9. Automatic upload and subtitle polling
-
-```text
-Please update the Streamlit dashboard (`app.py`) to fully automate the "Option 1: YouTube Auto-Transcription" workflow.
-
-I want to eliminate the manual YouTube upload step. Please implement the following features:
-
-1. Automated YouTube Upload:
-- Integrate the `google-api-python-client` and `google-auth-oauthlib` libraries.
-- After the user uploads an MP4 (or after the app converts an MP3 to MP4), provide a button to "Upload to YouTube & Fetch Transcript".
-- The script should authenticate using a local `client_secret.json` file. 
-- Automatically upload the MP4 to the authenticated user's YouTube channel as a "Private" or "Unlisted" video.
-- Retrieve the new Video ID upon successful upload.
-
-2. Subtitle Polling & Progress UI:
-- YouTube auto-transcription takes time. Implement a polling loop (checking every 30-60 seconds) to check if the Thai auto-generated subtitles are available.
-- Use `youtube-transcript-api` to attempt fetching the transcript inside the loop.
-- Use Streamlit's `st.spinner` or a progress bar/status message to show the user that the app is waiting for YouTube to process the audio (e.g., "Waiting for YouTube to generate subtitles... This may take several minutes. Time elapsed: X seconds").
-- Add a timeout mechanism (e.g., stop checking after 15 minutes) to prevent infinite loops.
-
-3. Final Output:
-- Once the transcript is successfully fetched, display it and provide the `.txt` and `.md` download buttons.
-
-4. Documentation Update:
-- Please also update `README.md` and `requirements.txt` to include the new Google API libraries.
-- Add a clear instruction section in `README.md` explaining how the user can generate the `client_secret.json` from the Google Cloud Console to make this feature work.
-
-Please apply these complex changes directly to the project files.
-```
-
-### 10. Questions about the Google sign-in
-
-```text
-อันนีหมายความว่าอย่างไร While the Google project is in Testing mode, the sign-in expires after 7 days. แล้วถ้าใช่ account ส่วนตัวได้ไหม
-```
-
-```text
-what do you mean "Sign-in: the app signs in with client_secret.json. A browser opens the first time, then token.json is reused. The upload goes to your channel in chunks with a progress bar, and the app gets the new video ID." ?
-```
-
-```text
-Google shows its own sign-in page., I don't see google show anything when I ran this ".\.venv\Scripts\python.exe -m streamlit run app.py"
-```
-
-(Then a red "client_secret.json not found" screenshot, and a Google "Error 403: access_denied" paste. Both were solved by creating the credentials and adding the user as a Test user.)
-
-```text
-upload complete and wait for  รอ YouTube สร้างคำบรรยาย
+13. HOW TO TEST (do this and report honestly)
+- Run the real app in the built-in browser with FAKE YouTube and FAKE Whisper functions (real
+  ffmpeg): check all three tabs, both themes, both languages, Stop, the delete/bulk-delete dialogs,
+  the README dialog, persistence after a page reload, and the empty channel list.
+- `python -m py_compile`, parse-check the .ps1 files, and run the Streamlit AppTest.
+- State clearly what was NOT verified (real YouTube upload/delete, a real second Google account,
+  a real model download).
 ```
 
 ---
 
-## Part 4 · More features
+## ถ้าอยากสั่งทีละส่วน (optional: step-by-step instead of one prompt)
 
-### 11. "Auto 1 Click" tab
+If one huge prompt is too much, paste these shorter prompts one after another. Each uses the
+sections of the MASTER PROMPT by number.
 
-```text
-เพิ่ม Tab "Auto 1 Click"
-Tab นี่ให้แค่ upload MP3 and upload youtube auto without user click.
-option :Click Bar for waiting from 15 min to 90 min
-Default 30 min.
-After upload finish do check available of transcription after default or above timer select.
-If the transcription available ,flag blink
-```
+1. `Read prompt/prompt.md. Build sections 1, 2, 3, 9 and 12 only (the Offline tab, hq_transcribe.py,
+   setup/uninstall scripts, .gitignore, license). Test, then stop.`
+2. `Now add sections 4 and 7 (Online tab, YouTube account, delete, history).`
+3. `Now add section 5 and 6 (Auto 1 Click, persistence, Stop).`
+4. `Now add section 8 (themes, tabs, bilingual UI, README viewer).`
+5. `Now write section 10 and 11 (README.md, README.th.md, SKILL.md). Then run section 13.`
 
-```text
-wait the full time first, then check once ,Check interval is 300 seconds,
-```
+## Tips
 
-### 12. Delete a YouTube video, and a README in the sidebar
-
-```text
-can you add delete youtube function in the below and add readme file in  left hand side so user can open for detail.
-```
-
-### 13. Closing the page must not lose the upload
-
-```text
-I found problem when the media file have been upload and finish but webpage have been closed then I start the app.py again it open newpage. can you have check first if the file have been complete upload therefore youtube might already have transcript then you can download and report . I found the https port are random use not sure if that would be problem.
-```
-
-### 14. Stop button, old YouTube records, bulk delete and history
-
-```text
-เพิ่ม ปุ่ม stop ยกเลิกงานกลางคันให้ด้วย  เพิ่ม record  youtube เก่าที่ upload แล้วก็มี list มี checkbox สำหรับ delete มี log file or history ด้าน panel ซ้ายมือให้กด click ดูรายละเอียดได้
-```
-
-### 15. More file formats, many files, bigger files
-
-```text
-Add feature
-1# can you add support .wav and other format M4A, WAV, MKV, WEBM file as well
-2# in  "Auto 1 Click" TAB, อัปโหลดไฟล์ with multiple file and above no.1# with no limited since upload to youtube not use PC resource.
-3# in  "offline" TAB , 2GB per file (MAX) • MP3, MP4, M4A, WAV, MKV, WEBM and อัปโหลดไฟล์ with multiple file
-```
-
-### 16. Online limit, Thai guide, red-flag prerequisite
-
-```text
-1#in  "online" TAB , 2GB per file (MAX)
-2#"Transcription" left Panel, in Tab "ไทย" or "English" 
-When select "ไทย" เปิดคู่มือ( README)
-คู่มือการใช้งาน ให้เพิ่มภาษาไทยกำกับ แทรกภาษาอังกฤษ ลงใน README
-When select "English"  keep the existing เปิดคู่มือ( README) that is fine
-
-
-in README , 
-
-Auto 1 Click tab ,Put prerequisite  "Set up client_secret.json" in Red Flag (See below)
-```
-
----
-
-## Part 5 · Look and feel, and publishing
-
-### 17. Theme like the reference screenshot
-
-A screenshot of a warm cream and terracotta app was attached with:
-
-```text
-ถ้าทำ theming แบบนี ได้ไหม
-```
-
-```text
-ทำได้เลย
-```
-
-### 18. Name, icon and tabs
-
-An icon image was attached with:
-
-```text
-I like name Speech to Text rather than Transcription .  can you change it ?
-I have icon file in attach. can you add it ?
-
-font TAB อยากได้ตัวหนาใหญ่ สัก 50% กรอบและ background ชัดกว่านี่
-```
-
-### 19. YouTube channel upload limit
-
-After a YouTube "uploadLimitExceeded" error:
-
-```text
-ผมใช่  second email ทำต่อได้ ทำอย่างไงต่อดี
-```
-
-### 20. Publish to GitHub
-
-```text
-could you upload this work into github url: https://github.com/jatturongs-collab/speech-to-text
-```
-
-### 21. MIT license and a red, bold README highlight
-
-```text
-เพิ่ม MIT and 
-
-Change README
-
-Highlight change to red font bold and 25% size.
-
-"This tab uploads to your own YouTube channel, so it cannot work without a client_secret.json file next to app.py. 
-Follow Set up client_secret.json (see below) before you use it. You only do it once."
-
-Add normal font size
-
-"
-ตัวอย่าง(Red Font) :
-
-normal font size
-
-copy file "client_secret.json" มาอยู่ที่เดียวกับ  "app.py" 
-
-Directory: D:\speech-to-text
-
-Mode                 LastWriteTime         Length Name
-----                 -------------         ------ ----
--a---          11/11/2026  4:42 AM            419 client_secret.json
--a---          11/11/2026  2:08 PM         106425 app.py
-"
-```
-
-```text
-LICENSE (MIT) เอาไว้ทำไม ?
-```
-
-```text
-ใช่ชือนี้แทน "AI investor alpha Jat" and you can push
-```
-
-### 22. This prompt folder
-
-```text
-can you add folder "prompt" , create file prompt and add prompt that I have ask you to do this skill.
-```
-
----
-
-## Tips if you want to reuse this
-
-- Start with the first dashboard prompt (number 4) to get the base app, then add features one at a time, as above.
-- Describe the limit or the pain you hit ("YouTube does not accept raw MP3 files") and ask for a fix. It worked better than asking for a big redesign in one step.
-- Ask for what the *friend* will see ("make the UI intuitive") and for the README to be updated each time.
+- Say "plan first" so Claude Code shows the plan before it writes code.
+- Keep secrets out of the chat: never paste `client_secret.json`, tokens or passwords. If an error
+  contains your e-mail or project ID, remove it before pasting.
+- Ask for evidence: "tell me what you tested and what you could not test".
+- Ask it to commit and push only when you are happy: "commit and push".
