@@ -1,0 +1,41 @@
+[server]
+# Server-wide cap (MB). app.py sets the real limit per uploader:
+# Auto 1 Click = 20480 (effectively unlimited), Online and Offline = 2048 (2 GB per file).
+maxUploadSize = 20480
+
+# Shared by both looks. Light ("warm cream") is the default; dark is available from the
+# Streamlit menu (top right: ⋮ > Settings > Theme).
+[theme]
+base = "light"
+baseRadius = "0.75rem"
+showWidgetBorder = true
+font = "IBM Plex Sans Thai:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap"
+paddingTop = "2.5rem"
+
+# Warm cream look (terracotta accent)
+[theme.light]
+primaryColor = "#C8643F"
+backgroundColor = "#F0EEE6"
+secondaryBackgroundColor = "#E7E0D1"
+textColor = "#3D3929"
+borderColor = "#D8CFBB"
+linkColor = "#A94E2C"
+
+[theme.light.sidebar]
+backgroundColor = "#E7E0D1"
+secondaryBackgroundColor = "#F0EEE6"
+borderColor = "#D8CFBB"
+
+# Dark "pro tool" look (the previous theme)
+[theme.dark]
+primaryColor = "#22d3ee"
+backgroundColor = "#0b1220"
+secondaryBackgroundColor = "#111a2e"
+textColor = "#e6edf7"
+borderColor = "#24324d"
+linkColor = "#67e8f9"
+
+[theme.dark.sidebar]
+backgroundColor = "#080e1b"
+secondaryBackgroundColor = "#111a2e"
+borderColor = "#24324d"

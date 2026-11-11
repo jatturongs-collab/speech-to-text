@@ -1,0 +1,19 @@
+# Secrets: never commit these
+client_secret.json
+token.json
+
+# Environment / caches
+.venv/
+__pycache__/
+
+# Media and generated transcripts
+*.mp3
+*.mp4
+*.m4a
+*.wav
+*.srt
+
+# Saved upload jobs and fetched transcripts
+jobs.json
+transcripts/
+history.jsonl

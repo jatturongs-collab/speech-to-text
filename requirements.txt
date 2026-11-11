@@ -1,0 +1,10 @@
+streamlit>=1.57
+faster-whisper>=1.2.1
+# av>=17 removed an option faster-whisper 1.2.1 still passes; keep below 17
+av<17
+yt-dlp
+youtube-transcript-api>=1.0
+# Automated YouTube upload (Option 1)
+google-api-python-client>=2.100
+google-auth-oauthlib>=1.2
+google-auth-httplib2>=0.2
