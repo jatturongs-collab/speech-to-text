@@ -21,19 +21,27 @@ A Streamlit dashboard (dark theme, Thai / English UI) that turns Thai audio/vide
 
 ### Windows (step by step)
 
-**Step 1. Install the prerequisites** (once)
+**Step 1. Install the prerequisites** (once; skip anything you already have)
 
 - **Git** from <https://git-scm.com/download/win>. Or skip Git and use **Code → Download ZIP** on GitHub, then extract it.
 - **Python:** nothing to do. Step 3 installs Python 3.13 automatically (side by side, so your existing Python, e.g. 3.15, is not changed).
 
-**Step 2. Get the project**
+**Step 2. Get the project.** Open PowerShell and run these one by one (this example uses `C:\tmp`; any folder works):
 
+```bash
+mkdir -Force C:\tmp
+```
+```bash
+cd C:\tmp
+```
 ```bash
 git clone https://github.com/jatturongs-collab/speech-to-text.git
 ```
 ```bash
 cd speech-to-text
 ```
+
+Without Git, extract the ZIP into `C:\tmp`. The folder is named `speech-to-text-main`, so run `cd C:\tmp\speech-to-text-main` instead of the last two commands. (A ZIP copy cannot be updated with `git pull`; download a new ZIP.)
 
 **Step 3. Run the setup script.** It installs ffmpeg and Python 3.13 (if missing), creates `.venv` with Python 3.13 and installs every package in `requirements.txt`. (`-ExecutionPolicy Bypass` is needed because Windows blocks `.ps1` files by default.)
 
