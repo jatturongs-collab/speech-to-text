@@ -203,7 +203,12 @@ The look is set in `.streamlit/config.toml` (colours, font, server upload cap). 
 - `Failed to build 'av'` → the venv was created with Python 3.14+. Delete `.venv` and run `setup.ps1` again (it uses Python 3.13).
 - `open() got an unexpected keyword argument 'metadata_errors'` → `av` is too new; run `pip install "av<17"`.
 - *client_secret.json not found* → follow the setup section above and place the file next to `app.py`.
-- *Access blocked / 403 access_not_configured* → the YouTube Data API v3 isn't enabled for your project, or your email isn't listed as a test user.
+- *`Error 403: access_denied` or "Access blocked"* on the Google sign-in page (the YouTube upload never starts) → the Google account you signed in with is **not listed as a Test user**. While the Google project is in *Testing* mode, only listed emails may sign in. This also happens on a second computer or with a new account. Fix it once per email:
+  1. Open [Google Cloud Console](https://console.cloud.google.com/) and select the **same project** that `client_secret.json` came from.
+  2. Go to **Google Auth Platform → Audience** (older console: **OAuth consent screen**).
+  3. Check that *Publishing status* is **Testing**, then under **Test users** press **Add users**, type the exact email you sign in with, and **Save**. (Up to 100 test users.)
+  4. Go back to the app, start the upload again and choose that same account. If a different account is remembered, press **Switch Google account** in the left sidebar first.
+- *403 access_not_configured* → the YouTube Data API v3 isn't enabled for your project (Google Cloud → **APIs & Services → Library** → YouTube Data API v3 → **Enable**).
 - *Upload fine, but no transcript after 15 minutes* → YouTube can be slow, or it couldn't detect speech. Press **Check again** after a while, and confirm the video has captions in YouTube Studio.
 - *"The user has exceeded the number of videos they may upload" (`uploadLimitExceeded`)* → your YouTube **channel** reached its own daily upload limit (this is not the API quota). Options: wait about 24 hours; verify the channel with a phone number at <https://www.youtube.com/verify> (raises the limit); or use another Google account: press **Switch Google account** in the left sidebar, add the new email as a **Test user** in Google Cloud (consent screen → Audience), then start an upload and pick the new account. Videos and jobs of the old account cannot be checked or deleted from the new one.
 - Offline run is slow → expected on CPU with the full `large-v3` model. Try a short clip first.

@@ -204,7 +204,12 @@ Mode                 LastWriteTime         Length Name
 - `Failed to build 'av'` → venv ถูกสร้างด้วย Python 3.14 ขึ้นไป ให้ลบโฟลเดอร์ `.venv` แล้วรัน `setup.ps1` ใหม่ (ใช้ Python 3.13)
 - `open() got an unexpected keyword argument 'metadata_errors'` → `av` ใหม่เกินไป รัน `pip install "av<17"`
 - *client_secret.json not found* → ทำตามหัวข้อตั้งค่าด้านบน แล้ววางไฟล์ข้าง `app.py`
-- *Access blocked / 403 access_not_configured* → ยังไม่ได้เปิด YouTube Data API v3 ในโปรเจกต์ หรืออีเมลของคุณไม่ได้อยู่ในรายชื่อ Test user
+- *`Error 403: access_denied` หรือ "Access blocked"* ที่หน้าล็อกอิน Google (อัปโหลดขึ้น YouTube ไม่เริ่มทำงาน) → บัญชี Google ที่ล็อกอิน **ยังไม่อยู่ในรายชื่อ Test user** ตราบที่โปรเจกต์ Google อยู่ในโหมด *Testing* จะมีเฉพาะอีเมลในรายชื่อเท่านั้นที่ล็อกอินได้ พบบ่อยเมื่อใช้เครื่องที่สองหรือบัญชีใหม่ แก้ครั้งเดียวต่ออีเมล:
+  1. เปิด [Google Cloud Console](https://console.cloud.google.com/) แล้วเลือก **โปรเจกต์เดียวกัน** กับที่ได้ไฟล์ `client_secret.json`
+  2. ไปที่ **Google Auth Platform → Audience** (คอนโซลแบบเก่า: **OAuth consent screen**)
+  3. ตรวจว่า *Publishing status* เป็น **Testing** แล้วที่หัวข้อ **Test users** กด **Add users** พิมพ์อีเมลที่ใช้ล็อกอินให้ตรงทุกตัวอักษร แล้วกด **Save** (เพิ่มได้สูงสุด 100 อีเมล)
+  4. กลับมาที่แอป เริ่มอัปโหลดอีกครั้ง แล้วเลือกบัญชีเดียวกัน ถ้าแอปจำบัญชีอื่นไว้ ให้กด **เปลี่ยนบัญชี Google (Switch Google account)** ที่แถบซ้ายก่อน
+- *403 access_not_configured* → ยังไม่ได้เปิด YouTube Data API v3 ในโปรเจกต์ (Google Cloud → **APIs & Services → Library** → YouTube Data API v3 → **Enable**)
 - *อัปโหลดสำเร็จ แต่ไม่มี transcript หลัง 15 นาที* → YouTube อาจช้า หรือจับเสียงพูดไม่ได้ กด **ตรวจอีกครั้ง** ภายหลัง และตรวจว่าวิดีโอมีคำบรรยายใน YouTube Studio หรือไม่
 - *"The user has exceeded the number of videos they may upload" (`uploadLimitExceeded`)* → **ช่อง** YouTube ของคุณอัปโหลดครบจำนวนต่อวันที่ YouTube กำหนดแล้ว (ไม่ใช่โควต้า API) ทางเลือก: รอประมาณ 24 ชั่วโมง, ยืนยันช่องด้วยเบอร์โทรที่ <https://www.youtube.com/verify> (เพิ่มขีดจำกัด), หรือใช้บัญชี Google อื่น: กด **เปลี่ยนบัญชี Google** ที่แถบซ้าย เพิ่มอีเมลใหม่เป็น **Test user** ใน Google Cloud (consent screen → Audience) แล้วเริ่มอัปโหลดและเลือกบัญชีใหม่ วิดีโอและงานของบัญชีเดิมจะตรวจหรือลบจากบัญชีใหม่ไม่ได้
 - Offline ช้า → เป็นเรื่องปกติเมื่อใช้โมเดล `large-v3` เต็มบน CPU ลองกับคลิปสั้นก่อน
