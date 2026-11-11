@@ -593,9 +593,48 @@ def audio_duration(path: str) -> float | None:
         return None
 
 
+def find_ffmpeg() -> str | None:
+    """Locate ffmpeg even if this process started with an out-of-date PATH.
+
+    Windows only: right after `winget install Gyan.FFmpeg` the PATH of an already
+    running terminal (or of the process that launched Streamlit) does not contain
+    ffmpeg yet. So we also re-read the PATH from the registry and look in the
+    winget package folder.
+    """
+    found = shutil.which("ffmpeg")
+    if found or os.name != "nt":
+        return found
+    candidates: list[str] = []
+    try:
+        import winreg
+        for root, sub in (
+            (winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"),
+            (winreg.HKEY_CURRENT_USER, "Environment"),
+        ):
+            try:
+                with winreg.OpenKey(root, sub) as k:
+                    value, _ = winreg.QueryValueEx(k, "Path")
+                    candidates += [os.path.expandvars(p) for p in value.split(os.pathsep) if p]
+            except OSError:
+                pass
+    except ImportError:
+        pass
+    local = os.environ.get("LOCALAPPDATA")
+    if local:
+        pkgs = Path(local) / "Microsoft" / "WinGet" / "Packages"
+        if pkgs.is_dir():
+            candidates += [str(p.parent) for p in pkgs.glob("Gyan.FFmpeg*/**/bin/ffmpeg.exe")]
+    for folder in candidates:
+        exe = Path(folder) / "ffmpeg.exe"
+        if exe.is_file():
+            os.environ["PATH"] = str(folder) + os.pathsep + os.environ.get("PATH", "")
+            return str(exe)
+    return None
+
+
 def mp3_to_mp4(src: str, dst: str, on_progress) -> None:
     """Add a static black 1280x720 video track to audio so YouTube accepts it."""
-    ffmpeg = shutil.which("ffmpeg")
+    ffmpeg = find_ffmpeg()
     if not ffmpeg:
         raise RuntimeError(
             "ffmpeg was not found. Install it (Windows: `winget install Gyan.FFmpeg`, "
@@ -1136,7 +1175,7 @@ with st.sidebar:
             f"**{t('engine_vad')}** · `500 ms`  \n"
             f"**{t('engine_loop')}** · `on`"
         )
-    if shutil.which("ffmpeg"):
+    if find_ffmpeg():
         st.badge(f"{t('ffmpeg')}: {t('ffmpeg_ok')}", icon=":material/check_circle:", color="green")
     else:
         st.badge(f"{t('ffmpeg')}: {t('ffmpeg_missing')}", icon=":material/error:", color="red")
