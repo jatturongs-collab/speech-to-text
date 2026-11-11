@@ -60,8 +60,19 @@ When you start the app again, the **Uploaded jobs** panel at the top lists them.
 
 > [!CAUTION]
 > 🚩 **Prerequisite: set up `client_secret.json` first**
->
-> This tab uploads to your own YouTube channel, so it cannot work without a `client_secret.json` file next to `app.py`. Follow [Set up `client_secret.json`](#set-up-client_secretjson-needed-for-the-automatic-upload) (see below) before you use it. You only do it once.
+
+### 🔴 This tab uploads to your own YouTube channel, so it cannot work without a `client_secret.json` file next to `app.py`. Follow [Set up `client_secret.json`](#set-up-client_secretjson-needed-for-the-automatic-upload) (see below) before you use it. You only do it once.
+
+**🔴 Example:** copy the file `client_secret.json` into the same folder as `app.py`:
+
+```text
+Directory: D:\speech-to-text
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          11/11/2026  4:42 AM            419 client_secret.json
+-a---          11/11/2026  2:08 PM         106425 app.py
+```
 
 The fastest path: upload one **or many** files and walk away. **Choosing the files starts everything immediately, with no extra confirmation.**
 
@@ -155,3 +166,7 @@ The look is set in `.streamlit/config.toml` (colours, font, server upload cap). 
 ## Claude Skill
 
 `SKILL.md` lets Claude Code manage and extend this project. Copy it into `.claude/skills/speech-to-text-dashboard/` (or your personal skills folder) to use it.
+
+## License
+
+[MIT](LICENSE) © 2026 jatturongs-collab

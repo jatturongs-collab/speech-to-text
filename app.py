@@ -891,19 +891,35 @@ def render_readme(text: str) -> None:
     alert = re.compile(r"(?m)^> \[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][ \t]*\n((?:>.*(?:\n|$))*)")
     boxes = {"CAUTION": st.error, "WARNING": st.warning, "NOTE": st.info, "IMPORTANT": st.info,
              "TIP": st.success}
-    image = re.compile(r"(?m)^!\[([^\]]*)\]\((assets/[^)]+)\)[ 	]*$")
+    # README conventions (plain Markdown, so GitHub shows them too):
+    #   "### 🔴 text"  -> in the app: red, bold, 125% size paragraph (GitHub: an H3, i.e. bold and 125%)
+    #   "**🔴 text**"  -> in the app: red bold label (GitHub: bold with a red dot)
+    special = re.compile(r"(?m)^(?:!\[([^\]]*)\]\((assets/[^)]+)\)|### 🔴 (.+?))[ \t]*$")
+
+    def red_html(line: str) -> str:
+        from html import escape
+
+        h = escape(line.replace("**", ""))
+        h = re.sub(r"`([^`]+)`", r'<code style="color:inherit">\1</code>', h)
+        h = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2" style="color:inherit">\1</a>', h)
+        return f'<p style="color:#E5372B;font-weight:700;font-size:125%;margin:.5rem 0 1rem">{h}</p>'
+
+    def flush(part: str) -> None:
+        if part.strip():
+            st.markdown(re.sub(r"\*\*🔴 (.+?)\*\*", r":red[**\1**]", part))
 
     def md(chunk: str) -> None:
         pos_i = 0
-        for im in image.finditer(chunk):
-            if chunk[pos_i:im.start()].strip():
-                st.markdown(chunk[pos_i:im.start()])
-            path = APP_DIR / im.group(2)
-            if path.exists():
-                st.image(str(path), width="stretch", alt=im.group(1))
-            pos_i = im.end()
-        if chunk[pos_i:].strip():
-            st.markdown(chunk[pos_i:])
+        for sm in special.finditer(chunk):
+            flush(chunk[pos_i:sm.start()])
+            if sm.group(3):
+                st.html(red_html(sm.group(3)))
+            else:
+                path = APP_DIR / sm.group(2)
+                if path.exists():
+                    st.image(str(path), width="stretch", alt=sm.group(1))
+            pos_i = sm.end()
+        flush(chunk[pos_i:])
 
     pos = 0
     for m in alert.finditer(text):

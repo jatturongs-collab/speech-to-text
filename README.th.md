@@ -61,8 +61,19 @@ streamlit run app.py
 
 > [!CAUTION]
 > 🚩 **ข้อกำหนดเบื้องต้น (Prerequisite): ต้องตั้งค่า `client_secret.json` ก่อน**
->
-> แท็บนี้อัปโหลดขึ้นช่อง YouTube ของคุณ จึงใช้งานไม่ได้ถ้าไม่มีไฟล์ `client_secret.json` ข้างไฟล์ `app.py` ทำตามขั้นตอน [ตั้งค่า `client_secret.json`](#ตั้งค่า-client_secretjson-จำเป็นสำหรับการอัปโหลดอัตโนมัติ) (Set up `client_secret.json`) ด้านล่างก่อน ซึ่งทำครั้งเดียวพอ
+
+### 🔴 แท็บนี้อัปโหลดขึ้นช่อง YouTube ของคุณ จึงใช้งานไม่ได้ถ้าไม่มีไฟล์ `client_secret.json` ข้างไฟล์ `app.py` ทำตามขั้นตอน [ตั้งค่า `client_secret.json`](#ตั้งค่า-client_secretjson-จำเป็นสำหรับการอัปโหลดอัตโนมัติ) (Set up `client_secret.json`) ด้านล่างก่อน ซึ่งทำครั้งเดียวพอ
+
+**🔴 ตัวอย่าง:** copy file "client_secret.json" มาอยู่ที่เดียวกับ "app.py"
+
+```text
+Directory: D:\speech-to-text
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          11/11/2026  4:42 AM            419 client_secret.json
+-a---          11/11/2026  2:08 PM         106425 app.py
+```
 
 ทางที่เร็วที่สุด: อัปโหลดไฟล์ **หนึ่งไฟล์หรือหลายไฟล์** แล้วปล่อยให้ระบบทำงาน **เมื่อเลือกไฟล์ ระบบจะเริ่มทำงานทันที โดยไม่ถามยืนยันซ้ำ**
 
@@ -156,3 +167,7 @@ streamlit run app.py
 ## Claude Skill
 
 `SKILL.md` ช่วยให้ Claude Code ดูแลและต่อยอดโปรเจกต์นี้ได้ คัดลอกไปไว้ที่ `.claude/skills/speech-to-text-dashboard/` (หรือโฟลเดอร์ skills ส่วนตัวของคุณ) เพื่อใช้งาน
+
+## สัญญาอนุญาต (License)
+
+[MIT](LICENSE) © 2026 jatturongs-collab
